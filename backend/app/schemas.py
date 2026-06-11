@@ -16,9 +16,14 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: EmailStr
+    is_verified: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
 
 
 class Token(BaseModel):

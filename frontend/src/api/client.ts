@@ -3,6 +3,7 @@ const API_BASE = "/api";
 export type User = {
   id: number;
   email: string;
+  is_verified: boolean;
   created_at: string;
 };
 
@@ -49,6 +50,20 @@ export async function login(email: string, password: string): Promise<AuthToken>
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  return response.json();
+}
+
+export async function verifyEmail(token: string): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE}/auth/verify-email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
   });
 
   if (!response.ok) {

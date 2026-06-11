@@ -38,8 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(async (email: string, password: string) => {
     await api.register(email, password);
-    await login(email, password);
-  }, [login]);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);

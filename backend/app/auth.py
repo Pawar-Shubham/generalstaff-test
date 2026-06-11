@@ -43,6 +43,11 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     user = get_user_by_email(db, email)
     if not user or not verify_password(password, user.hashed_password):
         return None
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email is not verified",
+        )
     return user
 
 

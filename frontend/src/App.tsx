@@ -4,6 +4,7 @@ import { useAuth } from "./context/AuthContext";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -50,6 +51,14 @@ export default function App() {
         element={
           <PublicRoute>
             <Register />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/verify-email"
+        element={
+          <PublicRoute>
+            <VerifyEmail />
           </PublicRoute>
         }
       />

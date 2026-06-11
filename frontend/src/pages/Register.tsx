@@ -29,7 +29,7 @@ export default function Register() {
 
     try {
       await register(email, password);
-      navigate("/dashboard");
+      navigate("/verify-email");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {

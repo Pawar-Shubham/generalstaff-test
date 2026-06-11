@@ -1,3 +1,6 @@
+import secrets
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -10,8 +13,8 @@ from app.auth import (
     hash_password,
 )
 from app.database import get_db
-from app.models import User
-from app.schemas import Token, UserCreate, UserResponse
+from app.models import User, EmailVerificationToken
+from app.schemas import Token, UserCreate, UserResponse, VerifyEmailRequest
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -28,7 +31,39 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    # Generate verification token
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    verification_token = EmailVerificationToken(
+        user_id=user.id,
+        token=token,
+        expires_at=expires_at,
+    )
+    db.add(verification_token)
+    db.commit()
+
+    print(f"\n--- VERIFICATION TOKEN FOR {user.email} ---\n{token}\n----------------------------------\n")
+
     return user
+
+@router.post("/verify-email")
+def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)):
+    token_record = db.query(EmailVerificationToken).filter(EmailVerificationToken.token == payload.token).first()
+    if not token_record:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token")
+    
+    if token_record.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token expired")
+    
+    user = db.query(User).filter(User.id == token_record.user_id).first()
+    if user:
+        user.is_verified = True
+        db.delete(token_record)
+        db.commit()
+    
+    return {"message": "Email verified successfully"}
+
 
 
 @router.post("/login", response_model=Token)
